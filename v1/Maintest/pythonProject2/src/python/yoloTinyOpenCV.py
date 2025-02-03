@@ -11,9 +11,9 @@ LABELS = [
     "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup",
     "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange",
     "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa",
-    "pottedplant", "bed", "diningtable", "toilet", "TV monitor", "laptop", "mouse",
+    "potted plant", "bed", "dining table", "toilet", "TV monitor", "laptop", "mouse",
     "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink",
-    "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier",
+    "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair dryer",
     "toothbrush"
 ]
 
@@ -25,7 +25,7 @@ net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)  # HD çözünürlük
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)  # HD resolution
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 cv2.namedWindow("ForestGuardian Drone", cv2.WINDOW_NORMAL)
@@ -37,7 +37,7 @@ NMS_THRESHOLD = 0.4
 while True:
     ret, frame = cap.read()
     if not ret:
-        print("Kamera görüntüsü alınamadı.")
+        print("Failed to capture video from the camera.")
         break
 
     blob = cv2.dnn.blobFromImage(frame, 1 / 255.0, (608, 608), swapRB=True, crop=False)
