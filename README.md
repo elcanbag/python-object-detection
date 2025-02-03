@@ -1,2 +1,2 @@
-# phyton-object-detection
+# Python-object-detection
 versions
