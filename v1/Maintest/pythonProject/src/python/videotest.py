@@ -1,70 +1,79 @@
 import cv2
+import torch
 from ultralytics import YOLO
 
-# Load the YOLO model
+# YOLO modelini yükleyin
 model = YOLO("../yolov8n.pt")
 
+# Modelin isimleri üzerinden "train" sınıfının id'sini belirleyin
+train_class_id = None
+for key, value in model.names.items():
+    if value.lower() == "train":
+        train_class_id = int(key)
+        break
 
-#
-# Sabina, please load the video files.
-#
+if train_class_id is None:
+    print("Modelde 'train' sınıfı bulunamadı.")
 
-
-# video_path = "../videos/road.mp4"
-video_path = "../videos/fpvdrone.mp4"
-#video_path = "../videos/qazwsx.mp4"
-
-
-
-
+# Video dosyasını yükleyin
+video_path = "../videos/qazwsx.mp4"
 cap = cv2.VideoCapture(video_path)
 
 if not cap.isOpened():
-    print("Failed to load the video file.")
+    print("Video dosyası yüklenemedi.")
 else:
-    # Resolution settings
+    # Çözünürlük ayarları
     scale_percent = 50
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) * scale_percent / 100)
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) * scale_percent / 100)
     fps = int(cap.get(cv2.CAP_PROP_FPS))
 
-    # Create video output
+    # Video çıktı dosyasını oluşturun
     output = cv2.VideoWriter(
-        "../output_video.avi",  # Save in AVI format
+        "../output_video.avi",  # AVI formatında kaydediliyor
         cv2.VideoWriter_fourcc(*"XVID"),
         fps,
         (frame_width, frame_height)
     )
 
-    frame_skip = 5  # Perform detection every 5 frames
-    frame_count = 0  # Initialize frame counter
-    previous_results = None  # Store previous detection results
+    frame_skip = 5  # Her 5 karede bir tespit yap
+    frame_count = 0  # Kare sayacı
+    previous_results = None  # Önceki tespit sonuçlarını saklamak için
 
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
-        frame_count += 1  # Increment frame count
+        frame_count += 1  # Kare sayısını arttırın
         resized_frame = cv2.resize(frame, (frame_width, frame_height))
 
         if frame_count % frame_skip == 0:
-            # Perform detection with YOLO
+            # YOLO ile tespit yap
             results = model(resized_frame)
-            previous_results = results  # Store results
-        else:
-            results = previous_results  # Use previous results
 
-        # Draw the frame
+            # Tespit sonuçlarında 'train' nesnesini filtreleyin
+            for result in results:
+                if result.boxes is not None and len(result.boxes.data) > 0:
+                    boxes_data = result.boxes.data
+                    # Sadece 'train' olmayan kutuları tut
+                    keep = (boxes_data[:, 5].int() != train_class_id)
+                    result.boxes.data = boxes_data[keep]
+
+            previous_results = results
+        else:
+            results = previous_results
+
+        # Kare üzerine tespitleri çizdir
         if results:
             annotated_frame = results[0].plot()
         else:
             annotated_frame = resized_frame
 
-        # Save the processed frame
+        # İşlenmiş kareyi kaydet
         output.write(annotated_frame)
 
-        # Display the frame on screen
+        # Kareyi ekranda göster
         cv2.imshow("YOLOv8 Object Detection - Video", annotated_frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
